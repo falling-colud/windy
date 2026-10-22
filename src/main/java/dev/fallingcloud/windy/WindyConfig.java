@@ -37,6 +37,11 @@ public final class WindyConfig {
     private static final ModConfigSpec.BooleanValue DUST;
     private static final ModConfigSpec.BooleanValue RESPECT_PARTICLES;
 
+    private static final ModConfigSpec.EnumValue<WindSourceMode> WIND_SOURCE;
+    private static final ModConfigSpec.DoubleValue AERONAUTICS_FULL_STRENGTH_MPS;
+    private static final ModConfigSpec.BooleanValue AERONAUTICS_WEATHER;
+    private static final ModConfigSpec.BooleanValue GRASSIER_GRASS_SYNC;
+
     private static final ModConfigSpec.BooleanValue AMBIENT_ENABLED;
     private static final ModConfigSpec.EnumValue<Density> AMBIENT_DENSITY;
     private static final ModConfigSpec.IntValue AMBIENT_RADIUS;
@@ -52,6 +57,9 @@ public final class WindyConfig {
 
     /** How much of the wind shows per tick. */
     public enum Intensity { OFF, SUBTLE, NORMAL, LIVELY }
+
+    /** Where the wind direction and strength come from. */
+    public enum WindSourceMode { AUTO, VANILLA, AERONAUTICS }
 
     /** How many ambient biome motes hang in the air. */
     public enum Density { OFF, SUBTLE, LUSH, DENSE }
@@ -144,6 +152,26 @@ public final class WindyConfig {
         RESPECT_PARTICLES = b.comment("Ease off when the vanilla particle setting is Decreased, and stop on Minimal.")
                 .translation("windy.config.vanilla_particles")
                 .define("respectVanillaParticleSetting", bool(old, "respectVanillaParticleSetting", true));
+        GRASSIER_GRASS_SYNC = b.comment("Drive Grassier Grass's wind direction and strength from Windy while an "
+                        + "external wind source (Aeronautics) is active. Does nothing if Grassier Grass is absent.")
+                .translation("windy.config.grassier_grass_sync")
+                .define("grassierGrassSync", true);
+        b.pop();
+
+        b.comment("Aeronautics: Winds & Weather integration.")
+                .translation("windy.config.aeronautics").push("aeronautics");
+        WIND_SOURCE = b.comment("Where Windy gets its wind. AUTO follows Aeronautics when it is installed, "
+                        + "VANILLA keeps Windy's own living wind, and AERONAUTICS prefers Aeronautics and "
+                        + "warns if it cannot be used.")
+                .translation("windy.config.wind_source")
+                .defineEnum("windSource", WindSourceMode.AUTO);
+        AERONAUTICS_FULL_STRENGTH_MPS = b.comment("Aeronautics wind speed in m/s that maps to Windy's nominal "
+                        + "full visual strength. Aeronautics' base wind is 6 m/s and its cap is 55 m/s.")
+                .translation("windy.config.aeronautics_full_strength")
+                .defineInRange("aeronauticsFullStrengthMps", 20.0, 5.0, 60.0);
+        AERONAUTICS_WEATHER = b.comment("Use Aeronautics' regional weather for snow, dust, rain fading and storm visuals.")
+                .translation("windy.config.aeronautics_weather")
+                .define("aeronauticsWeather", true);
         b.pop();
 
         SPEC = b.build();
@@ -167,6 +195,12 @@ public final class WindyConfig {
     public boolean snow()                          { return SNOW.get(); }
     public boolean dust()                          { return DUST.get(); }
     public boolean respectVanillaParticleSetting() { return RESPECT_PARTICLES.get(); }
+    public boolean grassierGrassSync()             { return GRASSIER_GRASS_SYNC.get(); }
+
+    // --- Aeronautics ----------------------------------------------------------
+    public WindSourceMode windSource()               { return WIND_SOURCE.get(); }
+    public double aeronauticsFullStrengthMps()       { return AERONAUTICS_FULL_STRENGTH_MPS.get(); }
+    public boolean aeronauticsWeather()              { return AERONAUTICS_WEATHER.get(); }
 
     // --- ambient biome motes -------------------------------------------------
     public boolean ambientEnabled()   { return AMBIENT_ENABLED.get(); }
